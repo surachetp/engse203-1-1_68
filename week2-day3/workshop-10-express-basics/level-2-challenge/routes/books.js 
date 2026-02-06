@@ -1,0 +1,196 @@
+// routes/books.js
+const express = require('express');
+const router = express.Router();
+const dataStore = require('../data/dataStore');
+const { validateBook } = require('../middleware/validate');
+
+/**
+ * GET /api/books
+ * ใช้สำหรับดึงข้อมูลหนังสือทั้งหมด
+ * รองรับการกรอง genre และการแบ่งหน้า (pagination)
+ */
+router.get('/', (req, res) => {
+  // รับค่า query string
+  let { genre, page = 1, limit = 10 } = req.query;
+
+  // แปลง page และ limit เป็นตัวเลข
+  page = Number(page);
+  limit = Number(limit);
+
+  // ดึงข้อมูลหนังสือทั้งหมด
+  let books = dataStore.books;
+
+  // ถ้ามีการส่ง genre เข้ามา จะกรองหนังสือตามประเภท
+  if (genre) {
+    books = books.filter(book => book.genre === genre);
+  }
+
+  // เพิ่มข้อมูลผู้แต่ง (author) ให้กับหนังสือแต่ละเล่ม
+  const booksWithAuthor = books.map(book => {
+    const author = dataStore.authors.find(
+      a => a.id === book.authorId
+    );
+    return {
+      ...book,
+      author
+    };
+  });
+
+  // คำนวณตำแหน่งข้อมูลสำหรับการแบ่งหน้า
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+
+  // ตัดข้อมูลเฉพาะหน้าที่ต้องการ
+  const paginatedBooks = booksWithAuthor.slice(
+    startIndex,
+    endIndex
+  );
+
+  // ส่งข้อมูลกลับไปในรูปแบบ JSON
+  res.json({
+    page,
+    limit,
+    total: booksWithAuthor.length,
+    data: paginatedBooks
+  });
+});
+
+/**
+ * GET /api/books/:id
+ * ใช้สำหรับดึงข้อมูลหนังสือตามรหัส (ID)
+ */
+router.get('/:id', (req, res, next) => {
+  // ค้นหาหนังสือตาม id
+  const book = dataStore.books.find(
+    book => book.id === Number(req.params.id)
+  );
+
+  // ถ้าไม่พบหนังสือ ให้ส่ง status 404
+  if (!book) {
+    return res.status(404).json({
+      message: 'ไม่พบข้อมูลหนังสือ'
+    });
+  }
+
+  // ค้นหาข้อมูลผู้แต่งของหนังสือเล่มนี้
+  const author = dataStore.authors.find(
+    author => author.id === book.authorId
+  );
+
+  // ส่งข้อมูลหนังสือพร้อมข้อมูลผู้แต่ง
+  res.json({
+    ...book,
+    author
+  });
+});
+
+/**
+ * GET /api/books/search
+ * ใช้สำหรับค้นหาหนังสือจากชื่อหนังสือ
+ */
+router.get('/search', (req, res) => {
+  // รับคำค้นหาจาก query string
+  const { q } = req.query;
+
+  // ถ้าไม่ได้ส่งคำค้นมา ให้ส่ง array ว่างกลับไป
+  if (!q) {
+    return res.json([]);
+  }
+
+  // ค้นหาหนังสือโดยไม่สนใจตัวพิมพ์เล็ก-ใหญ่
+  const results = dataStore.books.filter(book =>
+    book.title.toLowerCase().includes(q.toLowerCase())
+  );
+
+  // ส่งผลลัพธ์การค้นหา
+  res.json(results);
+});
+
+/**
+ * POST /api/books
+ * ใช้สำหรับเพิ่มข้อมูลหนังสือใหม่
+ */
+router.post('/', validateBook, (req, res, next) => {
+  const { title, genre, authorId } = req.body;
+
+  // ตรวจสอบว่า authorId มีอยู่จริงหรือไม่
+  const authorExists = dataStore.authors.find(
+    author => author.id === authorId
+  );
+
+  if (!authorExists) {
+    return res.status(400).json({
+      message: 'ไม่พบข้อมูลผู้แต่ง'
+    });
+  }
+
+  // สร้างข้อมูลหนังสือใหม่
+  const newBook = {
+    id: dataStore.books.length
+      ? dataStore.books[dataStore.books.length - 1].id + 1
+      : 1,
+    title,
+    genre,
+    authorId
+  };
+
+  // เพิ่มหนังสือเข้าไปใน dataStore
+  dataStore.books.push(newBook);
+
+  // ส่งข้อมูลกลับพร้อม status 201 (Created)
+  res.status(201).json(newBook);
+});
+
+/**
+ * PUT /api/books/:id
+ * ใช้สำหรับแก้ไขข้อมูลหนังสือ
+ */
+router.put('/:id', validateBook, (req, res, next) => {
+  // ค้นหาหนังสือที่ต้องการแก้ไข
+  const book = dataStore.books.find(
+    book => book.id === Number(req.params.id)
+  );
+
+  // ถ้าไม่พบหนังสือ
+  if (!book) {
+    return res.status(404).json({
+      message: 'ไม่พบข้อมูลหนังสือ'
+    });
+  }
+
+  const { title, genre, authorId } = req.body;
+
+  // อัปเดตข้อมูลหนังสือ
+  book.title = title;
+  book.genre = genre;
+  book.authorId = authorId;
+
+  // ส่งข้อมูลที่อัปเดตแล้วกลับไป
+  res.json(book);
+});
+
+/**
+ * DELETE /api/books/:id
+ * ใช้สำหรับลบข้อมูลหนังสือ
+ */
+router.delete('/:id', (req, res, next) => {
+  // หาตำแหน่งของหนังสือใน array
+  const index = dataStore.books.findIndex(
+    book => book.id === Number(req.params.id)
+  );
+
+  // ถ้าไม่พบหนังสือ
+  if (index === -1) {
+    return res.status(404).json({
+      message: 'ไม่พบข้อมูลหนังสือ'
+    });
+  }
+
+  // ลบหนังสือออกจากระบบ
+  const deletedBook = dataStore.books.splice(index, 1);
+
+  // ส่งข้อมูลหนังสือที่ถูกลบกลับไป
+  res.json(deletedBook[0]);
+});
+
+module.exports = router;

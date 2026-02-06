@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "title": "Test task",
+    "priority": "medium",
+    "completed": false,
+    "createdAt": "2026-01-31T06:38:08Z"
+  },
+  {
+    "id": 2,
+    "title": "Second task",
+    "priority": "low",
+    "completed": false,
+    "createdAt": "2026-01-31T06:38:08Z"
+  }
+]
