@@ -1,0 +1,62 @@
+/* พื้นฐาน */
+body { font-family: sans-serif; margin: 0; background-color: #f4f4f4; }
+header { background: #333; color: #fff; padding: 1.5rem; text-align: center; }
+input[type="text"] { 
+    width: 60%; 
+    padding: 10px; 
+    border-radius: 20px; 
+    border: none; 
+    outline: none;
+}
+
+/* ปรับปรุง Responsive Grid ด้วย Flexbox */
+#product-list {
+    display: flex;         /* ใช้ Flexbox */
+    flex-wrap: wrap;      /* ให้การ์ดขึ้นบรรทัดใหม่เมื่อพื้นที่ไม่พอ */
+    justify-content: center; /* จัดการ์ดไว้กึ่งกลางหน้าจอ */
+    padding: 20px;
+    max-width: 1200px;    /* จำกัดความกว้างสูงสุดเพื่อความสวยงามบนจอใหญ่ */
+    margin: 0 auto;       /* จัดกลุ่มสินค้าให้อยู่กลางหน้า */
+}
+
+/* ปรับปรุงการ์ดสินค้าให้แปรผันตามหน้าจอ */
+.product-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    margin: 15px;
+    padding: 20px;
+    
+    /* Responsive Width: 
+       บนจอเล็กจะเป็นขนาดหนึ่ง บนจอใหญ่จะเรียงตัวกันสวยงาม 
+       คำนวณให้หักลบ margin ออกแล้ว */
+    width: calc(100% - 40px); /* Mobile: 1 คอลัมน์ */
+    max-width: 250px;        /* Desktop: ไม่ให้ใหญ่เกินไป */
+    
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    /* เพิ่มระยะเวลา transition เป็น 0.5s เพื่อให้อนิเมชั่นช้าลง */
+    transition: transform 0.5s ease, box-shadow 0.5s ease;
+}
+
+/* Hover Effect ที่คุณต้องการ */
+.product-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+}
+
+.product-card img { 
+    width: 100%; 
+    height: 180px; 
+    object-fit: contain; /* ป้องกันภาพเบี้ยว */
+    margin-bottom: 15px;
+}
+
+/* สไตล์ Loader */
+.loader {
+    text-align: center;
+    width: 100%;
+    padding: 50px;
+    font-size: 1.2rem;
+    color: #666;
+}
