@@ -1,0 +1,36 @@
+<<<<<<< HEAD
+.ssh/
+.env
+node_modules/
+node_modules/
+.env
+*.db
+*.db-shm
+*.db-wal
+*.log
+=======
+# Node
+node_modules/
+
+# Coverage
+coverage/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+
+# Test
+*.png
+*.jpg
+*.jpeg
+
+# Misc
+.env
+
+>>>>>>> 375eeea (add week3-day5 and .gitignore)
